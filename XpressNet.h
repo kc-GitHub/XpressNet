@@ -15,7 +15,7 @@
 // include types & constants of Wiring core API
 #if defined(WIRING)
 #include <Wiring.h>
-#elif ARDUINO >= 100
+#elif ARDUINO >= 100 
 #include <Arduino.h>
 #else
 #include <WProgram.h>
