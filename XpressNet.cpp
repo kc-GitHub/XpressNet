@@ -64,11 +64,11 @@ void XpressNetClass::start(byte XAdr, int XControl) // Initialisierung Serial
     myCallByteInquiry = callByteParity(MY_ADDRESS | 0x40) | 0x100;
     myDirectedOps     = callByteParity(MY_ADDRESS | 0x60) | 0x100;
 
-    // Fill xLokSts with default data.
     memset(&lokData, 0, sizeof(lokData));
     lokData.mode = 2;
     lokData.f0   = 0x30;
 
+    // Fill xLokSts with default data.
     for (Index = 0; Index < SlotMax; Index++)
     {
         memcpy(&xLokSts[Index], &lokData, sizeof(lokData));
