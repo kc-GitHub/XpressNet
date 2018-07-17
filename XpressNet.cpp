@@ -5,7 +5,7 @@
 *
 *
 *****************************************************************************
-* IMPORTANT: 
+* IMPORTANT:
 *
 * 	Please contact Lenz Inc. for details.
 *****************************************************************************
@@ -46,6 +46,9 @@ XpressNetClass::XpressNetClass()
 //******************************************Serial*******************************************
 void XpressNetClass::start(byte XAdr, int XControl) // Initialisierung Serial
 {
+    int Index;
+    XNetLok lokData;
+
     ledState       = LOW;      // Status LED, used to set the LED
     previousMillis = 0;        // Reset Time Count
     SlotTime       = millis(); // will store last time LED was updated
@@ -60,6 +63,16 @@ void XpressNetClass::start(byte XAdr, int XControl) // Initialisierung Serial
     myRequestAck      = callByteParity(MY_ADDRESS | 0x00) | 0x100;
     myCallByteInquiry = callByteParity(MY_ADDRESS | 0x40) | 0x100;
     myDirectedOps     = callByteParity(MY_ADDRESS | 0x60) | 0x100;
+
+    // Fill xLokSts with default data.
+    memset(&lokData, 0, sizeof(lokData));
+    lokData.mode = 2;
+    lokData.f0   = 0x30;
+
+    for (Index = 0; Index < SlotMax; Index++)
+    {
+        memcpy(&xLokSts[Index], &lokData, sizeof(lokData));
+    }
 
     // Set up on 62500 Baud
 #if APP_CFG_UC == APP_CFG_UC_ATMEL
@@ -881,8 +894,6 @@ void XpressNetClass::XNetget(uint16_t DataRx)
         {                                          // Daten sind für eigene Adresse?
             XNetMsg[XNetlength]++;                 // weitere Nachrichtendaten
             XNetMsg[XNetMsg[XNetlength]] = rxdata; // Eintragen
-            // serial.print(rxdata, HEX);
-            // serial.print(" ");
         }
     }
 }
