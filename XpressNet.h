@@ -170,7 +170,7 @@ private:
     unsigned int myDirectedOps;           // the address we look for when we are listening for ops
     unsigned int myCallByteInquiry;       // the address we look for for our Call Byte Window
     unsigned int myRequestAck;            // the address for a request acknowlegement sent
-    unsigned int XNetMsg[8];              // Serial receive (Length, Message, Command, Data1 to Data5)
+    unsigned int XNetMsg[15];             // Serial receive (Length, Message, Command, Data1 to Data5)
     boolean ReadData;                     // Empfangene Serial Daten: (Speichern = true/Komplett = false)
     static XpressNetClass* active_object; // aktuelle aktive Object
     void XNetget(uint16_t DataRx);        // Empfangene Daten eintragen
@@ -236,11 +236,14 @@ extern "C"
     extern void notifyLokFunc(uint8_t Adr_High, uint8_t Adr_Low, uint8_t F2, uint8_t F3) __attribute__((weak));
     extern void notifyLokAll(uint8_t Adr_High, uint8_t Adr_Low, boolean Busy, uint8_t Steps, uint8_t Speed,
         uint8_t Direction, uint8_t F0, uint8_t F1, uint8_t F2, uint8_t F3, boolean Req) __attribute__((weak));
+    extern void notifyLokDataBaseDataReceive(
+        uint8_t Adr_High, uint8_t Adr_Low, uint8_t LocCount, uint8_t NumberOfLocs, char* LocName) __attribute__((weak));
     extern void notifyCVInfo(uint8_t State) __attribute__((weak));
     extern void notifyCVResult(uint8_t cvAdr, uint8_t cvData) __attribute__((weak));
     extern void notifyTrnt(uint8_t Adr_High, uint8_t Adr_Low, uint8_t Pos) __attribute__((weak));
     extern void Stm32Uart2Int(uint16_t DataRx);
     extern void Stm32UartTxEnd(void);
+
     //	extern void notifyXNetData(unsigned int data, bool line) __attribute__((weak));
 
 #if defined(__cplusplus)

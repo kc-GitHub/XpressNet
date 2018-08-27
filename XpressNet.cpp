@@ -349,10 +349,21 @@ recieveStatus XpressNetClass::receive(void)
                 break;
             } // switch myDirectedOps ENDE
         }
-        //	if (ReadData == false)	//Nachricht komplett empfangen, dann hier
-        // löschen!
+        else if (XNetMsg[XNetcom] == 0xF1)
+        {
+            // Loc database data received.
+            uint8_t Adr_High   = XNetMsg[XNetdata1];
+            uint8_t Adr_Low    = XNetMsg[XNetdata2];
+            uint8_t Lok_Count  = XNetMsg[XNetdata3];
+            uint8_t Lok_Number = XNetMsg[XNetdata4];
+
+            if (notifyLokDataBaseDataReceive)
+            {
+                notifyLokDataBaseDataReceive(Adr_High, Adr_Low, Lok_Count, Lok_Number, NULL);
+            }
+        }
         XNetclear(); // alte verarbeitete Nachricht löschen
-    }                // Daten vorhanden ENDE
+    }
     else
     { // keine Daten empfangen, setzte LED = Blink
         previousMillis++;
@@ -890,6 +901,18 @@ void XpressNetClass::XNetget(uint16_t DataRx)
                 ReadData = true;
             }
         }
+        else
+        {
+            if ((rxdata >= 0xE5) && (rxdata <= 0xEF))
+            {
+                if (ReadData == false)
+                {
+                    XNetclear(); // alte Nachricht löschen
+                    ReadData = true;
+                }
+            }
+        }
+
         if (ReadData == true)
         {                                          // Daten sind für eigene Adresse?
             XNetMsg[XNetlength]++;                 // weitere Nachrichtendaten
