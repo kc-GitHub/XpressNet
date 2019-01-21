@@ -154,6 +154,7 @@ public:
     void readCVMode(byte CV);             // Lesen der CV im CV-Mode
     void writeCVMode(byte CV, byte Data); // Schreiben einer CV im CV-Mode
     void getresultCV();                   // Programmierergebnis anfordern
+    void writeCvPom(byte Adr_High, byte Adr_Low, byte CV, byte Data);  // Schreiben einer CV om POM Mode
     // Slot:
     void setFree(byte Adr_High, byte Adr_Low); // Lok aus Slot nehmen
 
