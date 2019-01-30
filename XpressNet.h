@@ -151,10 +151,10 @@ public:
     bool getTrntInfo(byte FAdr_High, byte FAdr_Low);          // Ermitteln der Schaltstellung einer Weiche
     bool setTrntPos(byte FAdr_High, byte FAdr_Low, byte Pos); // Schalten einer Weiche
     // Programming:
-    void readCVMode(byte CV);             // Lesen der CV im CV-Mode
-    void writeCVMode(byte CV, byte Data); // Schreiben einer CV im CV-Mode
-    void getresultCV();                   // Programmierergebnis anfordern
-    void writeCvPom(byte Adr_High, byte Adr_Low, byte CV, byte Data);  // Schreiben einer CV om POM Mode
+    void readCVMode(byte CV);                                         // Lesen der CV im CV-Mode
+    void writeCVMode(byte CV, byte Data);                             // Schreiben einer CV im CV-Mode
+    void getresultCV();                                               // Programmierergebnis anfordern
+    void writeCvPom(byte Adr_High, byte Adr_Low, word CV, byte Data); // Schreiben einer CV om POM Mode
     // Slot:
     void setFree(byte Adr_High, byte Adr_Low); // Lok aus Slot nehmen
 

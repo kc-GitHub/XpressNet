@@ -670,9 +670,10 @@ void XpressNetClass::getresultCV()
 
 //--------------------------------------------------------------------------------------------
 // Schreiben einer CV im POM-Mode
-void XpressNetClass::writeCvPom(byte Adr_High, byte Adr_Low, byte CV, byte Data)
+void XpressNetClass::writeCvPom(byte Adr_High, byte Adr_Low, word CV, byte Data)
 {
     unsigned char PomWrite[] = { 0xE6, 0x30, Adr_High, Adr_Low, 0xEC, 0x00, 0x00, 0x00, 0x00 };
+    PomWrite[4]              = (char)(CV >> 8);
     PomWrite[5]              = (char)(CV);
     PomWrite[6]              = (char)(Data);
     getXOR(PomWrite, 8);
