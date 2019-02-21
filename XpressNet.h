@@ -88,6 +88,8 @@
 #define csShortCircuit 0x04    // Kurzschluss
 #define csServiceMode 0x20     // Der Programmiermodus ist aktiv - Service Mode
 
+#define csLocDataBaseSend 0x40
+
 // XpressNet Befehl, jedes gesendete Byte
 #define XNetlength 0 // Länge
 #define XNetmsg 1    // Message
@@ -155,6 +157,9 @@ public:
     void writeCVMode(byte CV, byte Data);                             // Schreiben einer CV im CV-Mode
     void getresultCV();                                               // Programmierergebnis anfordern
     void writeCvPom(byte Adr_High, byte Adr_Low, word CV, byte Data); // Schreiben einer CV om POM Mode
+    void TransmitLocDatabaseEnable();                                 // Start senden loc data base Daten
+    void TransmitLocDatabaseDisable();                                // Stop senden loc data base Daten
+    void TransmitLocData(byte Adr_High, byte Adr_Low, byte locCount, byte numOfLocs);
     // Slot:
     void setFree(byte Adr_High, byte Adr_Low); // Lok aus Slot nehmen
 
@@ -172,6 +177,7 @@ private:
     unsigned int myCallByteInquiry;       // the address we look for for our Call Byte Window
     unsigned int myRequestAck;            // the address for a request acknowlegement sent
     unsigned int XNetMsg[15];             // Serial receive (Length, Message, Command, Data1 to Data5)
+    boolean XNetTrasnmitLocDbData;        // Transmit loc database
     boolean ReadData;                     // Empfangene Serial Daten: (Speichern = true/Komplett = false)
     static XpressNetClass* active_object; // aktuelle aktive Object
     void XNetget(uint16_t DataRx);        // Empfangene Daten eintragen
@@ -234,6 +240,7 @@ extern "C"
     extern void notifyXNetStatus(uint8_t LedState) __attribute__((weak));
     extern void notifyXNetVer(uint8_t V, uint8_t ID) __attribute__((weak));
     extern void notifyXNetPower(uint8_t State) __attribute__((weak));
+    extern void NotifyXNet(uint8_t Data) __attribute__((weak));
     extern void notifyLokFunc(uint8_t Adr_High, uint8_t Adr_Low, uint8_t F2, uint8_t F3) __attribute__((weak));
     extern void notifyLokAll(uint8_t Adr_High, uint8_t Adr_Low, boolean Busy, uint8_t Steps, uint8_t Speed,
         uint8_t Direction, uint8_t F0, uint8_t F1, uint8_t F2, uint8_t F3, boolean Req) __attribute__((weak));

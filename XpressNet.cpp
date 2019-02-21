@@ -680,6 +680,23 @@ void XpressNetClass::writeCvPom(byte Adr_High, byte Adr_Low, word CV, byte Data)
     XNetSendadd(PomWrite, 8);
 }
 
+//--------------------------------------------------------------------------------------------
+//
+void XpressNetClass::TransmitLocDatabaseEnable() { XNetTrasnmitLocDbData = true; }
+
+//--------------------------------------------------------------------------------------------
+//
+void XpressNetClass::TransmitLocDatabaseDisable() { XNetTrasnmitLocDbData = false; }
+
+//--------------------------------------------------------------------------------------------
+//
+void XpressNetClass::TransmitLocData(byte Adr_High, byte Adr_Low, byte locCount, byte numOfLocs)
+{
+    unsigned char LocDbWrite[] = { 0xEA, 0xF1, Adr_High, Adr_Low, locCount, numOfLocs, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x00 };
+    getXOR(LocDbWrite, 12);
+    XNetSendadd(LocDbWrite, 12);
+}
+
 // Private Methods
 // ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions only available to other functions in this library
@@ -901,10 +918,18 @@ void XpressNetClass::XNetget(uint16_t DataRx)
             else if (rxdata == myCallByteInquiry)
             {
                 unsigned char commandStatusSequence[] = { 0x21, 0x24, 0x05 };
-                if (XNetRun == false || Railpower == 0xFF)
+                if (XNetTrasnmitLocDbData == true)
+                {
+                    NotifyXNet(csLocDataBaseSend);
+                }
+                else if (XNetRun == false || Railpower == 0xFF)
+                {
                     XNetsend(commandStatusSequence, 3);
+                }
                 else
+                {
                     XNetsend();
+                }
                 return; // Daten wurden verarbeitet
             }
             else if (rxdata == GENERAL_BROADCAST || rxdata == myDirectedOps)
