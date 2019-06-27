@@ -352,14 +352,35 @@ recieveStatus XpressNetClass::receive(void)
         else if (XNetMsg[XNetcom] == 0xF1)
         {
             // Loc database data received.
+            char Loc_Name[11];
             uint8_t Adr_High   = XNetMsg[XNetdata1];
             uint8_t Adr_Low    = XNetMsg[XNetdata2];
             uint8_t Lok_Count  = XNetMsg[XNetdata3];
             uint8_t Lok_Number = XNetMsg[XNetdata4];
+            uint8_t CopyLength;
+            uint8_t CopyIndex;
+
+            // Copy locname when present
+            memset(Loc_Name, '\0', sizeof(Loc_Name));
+
+            if (XNetMsg[XNetmsg] > 0xE5)
+            {
+                CopyLength = XNetMsg[XNetmsg] - 0xE5;
+                if (CopyLength > 10)
+                {
+                    CopyLength = 10;
+                }
+
+                // opy name, use char() to convert from unsigned int to char
+                for (CopyIndex = 0; CopyIndex < CopyLength; CopyIndex++)
+                {
+                    Loc_Name[CopyIndex] = char(XNetMsg[XNetdata5 + CopyIndex]);
+                }
+            }
 
             if (notifyLokDataBaseDataReceive)
             {
-                notifyLokDataBaseDataReceive(Adr_High, Adr_Low, Lok_Count, Lok_Number, NULL);
+                notifyLokDataBaseDataReceive(Adr_High, Adr_Low, Lok_Count, Lok_Number, Loc_Name);
             }
         }
         XNetclear(); // alte verarbeitete Nachricht löschen
@@ -692,7 +713,8 @@ void XpressNetClass::TransmitLocDatabaseDisable() { XNetTrasnmitLocDbData = fals
 //
 void XpressNetClass::TransmitLocData(byte Adr_High, byte Adr_Low, byte locCount, byte numOfLocs)
 {
-    unsigned char LocDbWrite[] = { 0xEA, 0xF1, Adr_High, Adr_Low, locCount, numOfLocs, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x00 };
+    unsigned char LocDbWrite[]
+        = { 0xEA, 0xF1, Adr_High, Adr_Low, locCount, numOfLocs, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x2D, 0x00 };
     getXOR(LocDbWrite, 12);
     XNetSendadd(LocDbWrite, 12);
 }
