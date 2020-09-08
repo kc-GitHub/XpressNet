@@ -37,7 +37,7 @@
 #include <libmaple/ring_buffer.h>
 #include <libmaple/usart.h>
 
-static inline __always_inline void usart_irq(ring_buffer *rb, ring_buffer *wb,
+static inline __attribute__((always_inline)) void usart_irq(ring_buffer *rb, ring_buffer *wb,
                                              usart_reg_map *regs) {
   /* Handling RXNEIE and TXEIE interrupts.
    * RXNE signifies availability of a byte in DR.
@@ -66,7 +66,7 @@ static inline __always_inline void usart_irq(ring_buffer *rb, ring_buffer *wb,
 extern void Stm32Uart2Int(uint16_t DataRx);
 extern void Stm32UartTxEnd(void);
 
-static inline __always_inline void usart_irq_xpnet(ring_buffer *rb,
+static inline __attribute__((always_inline)) void usart_irq_xpnet(ring_buffer *rb,
                                                    ring_buffer *wb,
                                                    usart_reg_map *regs) {
   /* Handling RXNEIE and TXEIE interrupts.
