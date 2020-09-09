@@ -37,65 +37,61 @@
 #include <libmaple/ring_buffer.h>
 #include <libmaple/usart.h>
 
-static inline __always_inline void usart_irq(ring_buffer *rb, ring_buffer *wb,
-                                             usart_reg_map *regs) {
-  /* Handling RXNEIE and TXEIE interrupts.
-   * RXNE signifies availability of a byte in DR.
-   *
-   * See table 198 (sec 27.4, p809) in STM document RM0008 rev 15.
-   * We enable RXNEIE. */
-  if ((regs->CR1 & USART_CR1_RXNEIE) && (regs->SR & USART_SR_RXNE)) {
+static inline __always_inline void usart_irq(ring_buffer* rb, ring_buffer* wb, usart_reg_map* regs)
+{
+    /* Handling RXNEIE and TXEIE interrupts.
+     * RXNE signifies availability of a byte in DR.
+     *
+     * See table 198 (sec 27.4, p809) in STM document RM0008 rev 15.
+     * We enable RXNEIE. */
+    if ((regs->CR1 & USART_CR1_RXNEIE) && (regs->SR & USART_SR_RXNE))
+    {
 #ifdef USART_SAFE_INSERT
-    /* If the buffer is full and the user defines USART_SAFE_INSERT,
-     * ignore new bytes. */
-    rb_safe_insert(rb, (uint8)regs->DR);
+        /* If the buffer is full and the user defines USART_SAFE_INSERT,
+         * ignore new bytes. */
+        rb_safe_insert(rb, (uint8)regs->DR);
 #else
-    /* By default, push bytes around in the ring buffer. */
-    rb_push_insert(rb, (uint8)regs->DR);
+        /* By default, push bytes around in the ring buffer. */
+        rb_push_insert(rb, (uint8)regs->DR);
 #endif
-  }
-  /* TXE signifies readiness to send a byte to DR. */
-  if ((regs->CR1 & USART_CR1_TCIE) && (regs->SR & USART_SR_TC)) {
-    if (!rb_is_empty(wb))
-      regs->DR = rb_remove(wb);
-    else
-      regs->CR1 &= ~((uint32)USART_CR1_TCIE);  // disable TXEIE
-  }
+    }
+    /* TXE signifies readiness to send a byte to DR. */
+    if ((regs->CR1 & USART_CR1_TCIE) && (regs->SR & USART_SR_TC))
+    {
+        if (!rb_is_empty(wb))
+            regs->DR = rb_remove(wb);
+        else
+            regs->CR1 &= ~((uint32)USART_CR1_TCIE); // disable TXEIE
+    }
 }
 
 extern void Stm32Uart2Int(uint16_t DataRx);
 extern void Stm32UartTxEnd(void);
 
-static inline __always_inline void usart_irq_xpnet(ring_buffer *rb,
-                                                   ring_buffer *wb,
-                                                   usart_reg_map *regs) {
-  /* Handling RXNEIE and TXEIE interrupts.
-   * RXNE signifies availability of a byte in DR.
-   *
-   * See table 198 (sec 27.4, p809) in STM document RM0008 rev 15.
-   * We enable RXNEIE. */
-  if ((regs->CR1 & USART_CR1_RXNEIE) && (regs->SR & USART_SR_RXNE)) {
-#ifdef USART_SAFE_INSERT
-    /* If the buffer is full and the user defines USART_SAFE_INSERT,
-     * ignore new bytes. */
-    rb_safe_insert(rb, (uint8)regs->DR);
-#else
-    /* By default, push bytes around in the ring buffer. */
-    Stm32Uart2Int(regs->DR);
-#endif
-  }
-  /* TC signifies readiness to send a byte to DR while previous byte was
-   * transmitted.. */
-  if ((regs->CR1 & USART_CR1_TCIE) && (regs->SR & USART_SR_TC)) {
-    if (!rb_is_empty(wb))
-      regs->DR = rb_remove(wb);
-    else {
-      regs->CR1 &= ~((uint32)USART_CR1_TCIE);  // disable TXEIE
-      Stm32UartTxEnd();
+static inline __always_inline void usart_irq_xpnet(ring_buffer* rb, ring_buffer* wb, usart_reg_map* regs)
+{
+    // Keep compiler happy.
+    rb = rb;
+
+    if ((regs->CR1 & USART_CR1_RXNEIE) && (regs->SR & USART_SR_RXNE))
+    {
+        // Handle received data directly...
+        Stm32Uart2Int(regs->DR);
     }
-  }
+    /* TC signifies readiness to send a byte to DR while previous byte was
+     * transmitted.. */
+    if ((regs->CR1 & USART_CR1_TCIE) && (regs->SR & USART_SR_TC))
+    {
+        if (!rb_is_empty(wb))
+            regs->DR = rb_remove(wb);
+        else
+        {
+            regs->CR1 &= ~((uint32)USART_CR1_TCIE); // disable TXEIE
+            Stm32UartTxEnd();
+        }
+    }
 }
 
-uint32 _usart_clock_freq(usart_dev *dev);
+uint32 _usart_clock_freq(usart_dev* dev);
 
 #endif

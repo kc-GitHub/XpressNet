@@ -23,58 +23,6 @@
 
 #include "app_cfg.h"
 
-/* From the ATMega datasheet: */
-//--------------------------------------------------------------------------------------------
-// Which serial port is used, if we have more than one on the chip?
-// note that the 328s (the currently produced "smaller" chips) only
-// have one serial port, so we force this.
-#if APP_CFG_UC == APP_CFG_UC_ATMEL
-#ifdef __AVR_ATmega328P__
-#define SERIAL_PORT_0
-#undef SERIAL_PORT_1
-#else
-// Maybe we are running on a MEGA chip with more than 1 port? If so, you
-// can put the serial port to port 1, and use the port 0 for status messages
-// to your PC.
-#define SERIAL_PORT_1
-#undef SERIAL_PORT_0
-#endif
-#else
-#endif
-
-// when sending data, do NOT continue until the hardware has sent the data out
-#if APP_CFG_UC == APP_CFG_UC_ATMEL
-#ifdef __AVR_ATmega8__
-#define WAIT_FOR_XMIT_COMPLETE                                                                                         \
-    {                                                                                                                  \
-        while (!(UCSRA & (1 << TXC)))                                                                                  \
-            ;                                                                                                          \
-        UCSRA = (1 << TXC);                                                                                            \
-        UCSRA = 0;                                                                                                     \
-    }
-#else
-#ifdef SERIAL_PORT_0
-#define WAIT_FOR_XMIT_COMPLETE                                                                                         \
-    {                                                                                                                  \
-        while (!(UCSR0A & (1 << TXC0)))                                                                                \
-            ;                                                                                                          \
-        UCSR0A = (1 << TXC0);                                                                                          \
-        UCSR0A = 0;                                                                                                    \
-    }
-#else
-#define WAIT_FOR_XMIT_COMPLETE                                                                                         \
-    {                                                                                                                  \
-        while (!(UCSR1A & (1 << TXC1)))                                                                                \
-            ;                                                                                                          \
-        UCSR1A = (1 << TXC1);                                                                                          \
-        UCSR1A = 0;                                                                                                    \
-    }
-#endif
-#endif
-#else
-#define WAIT_FOR_XMIT_COMPLETE
-#endif
-
 //--------------------------------------------------------------------------------------------
 
 // XPressnet Call Bytes.
@@ -164,8 +112,8 @@ public:
     void setFree(byte Adr_High, byte Adr_Low); // Lok aus Slot nehmen
 
     // public only for easy access by interrupt handlers
-    static inline void handle_interrupt(uint16_t DataRx); // Serial Interrupt bearbeiten
-    static inline void XpNetMsgEnd(void);
+    static void handle_interrupt(uint16_t DataRx); // Serial Interrupt bearbeiten
+    static void XpNetMsgEnd(void);
 
     // library-accessible "private" interface
 private:
@@ -187,7 +135,6 @@ private:
     // Functions:
     void getXOR(unsigned char* data, byte length); // calculate the XOR
     unsigned int callByteParity(unsigned int me);  // calculate the parity bit
-    int USART_Receive(void);                       // Serial Empfangen
     void USART_Transmit(unsigned char data8);      // Serial Senden
     void XNetclear(void);                          // Serial Nachricht zurücksetzten
 

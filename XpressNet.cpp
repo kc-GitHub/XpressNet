@@ -15,7 +15,7 @@
 
 // include this library's description file
 #if APP_CFG_UC == APP_CFG_UC_ATMEL
-#include <avr/interrupt.h>
+#error Only for STM32F1 !
 #else
 #include <libmaple/usart.h>
 #endif
@@ -75,44 +75,9 @@ void XpressNetClass::start(byte XAdr, int XControl) // Initialisierung Serial
     }
 
     // Set up on 62500 Baud
-#if APP_CFG_UC == APP_CFG_UC_ATMEL
-    cli(); // disable interrupts while initializing the USART
-#ifdef __AVR_ATmega8__
-    UBRRH = 0;
-    UBRRL = 0x0F;
-    UCSRA = 0;
-    UCSRB = (1 << RXEN) | (1 << TXEN) | (1 << RXCIE) | (1 << UCSZ2);
-    UCSRC = (1 << UCSZ1) | (1 << UCSZ0);
-#else
-#ifdef SERIAL_PORT_0
-    UBRR0H = 0;
-    UBRR0L = 0x0F;
-    UCSR0A = 0;
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0) | (1 << UCSZ02);
-    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
-#else
-    UBRR1H = 0;
-    UBRR1L = 0x0F;
-    UCSR1A = 0;
-    UCSR1B = (1 << RXEN1) | (1 << TXEN1) | (1 << RXCIE1) | (1 << UCSZ12);
-    UCSR1C = (1 << UCSZ11) | (1 << UCSZ10);
-#endif
-#endif
-
-    sei(); // Enable the Global Interrupt Enable flag so that interrupts can be
-           // processed
-           /*
-            *  Enable reception (RXEN = 1).
-            *  Enable transmission (TXEN0 = 1).
-            *	Enable Receive Interrupt (RXCIE = 1).
-            *  Set 8-bit character mode (UCSZ00, UCSZ01, and UCSZ02 together control
-            *this, But UCSZ00, UCSZ01 are in Register UCSR0C).
-            */
-#else
-    /* On Stm32FG103 use UART3 for XpNet. */
+    /* On Stm32F103 use UART3 for XpNet and set 9 bit data format. */
     Serial3.begin(62500);
     USART3_BASE->CR1 |= USART_CR1_M_9N1;
-#endif
 
     active_object = this; // hold Object to call it back in ISR
 }
@@ -756,103 +721,7 @@ unsigned int XpressNetClass::callByteParity(unsigned int me)
 }
 
 //--------------------------------------------------------------------------------------------
-int XpressNetClass::USART_Receive(void)
-{
-    // Wait for data to be received
-#if APP_CFG_UC == APP_CFG_UC_ATMEL
-    unsigned char status, resh, resl;
-#ifdef __AVR_ATmega8__
-    status = UCSRA;
-    while (!(status & (1 << RXC)))
-    {
-        return -1;
-    } // status = UCSRA;}
-
-    // Get status and 9th bit, then data
-    resh = UCSRB;
-    resl = UDR;
-
-    // If error, return -1
-    if (status & ((1 << FE) | (1 << DOR) | (1 << PE)))
-    {
-        return -1;
-    }
-
-#else
-#ifdef SERIAL_PORT_0
-    status = UCSR0A;
-    while (!(status & (1 << RXC0)))
-    {
-        return -1;
-    } // status = UCSR0A;}
-
-    // Get status and 9th bit, then data
-    resh = UCSR0B;
-    resl = UDR0;
-
-    // If error, return -1
-    if (status & ((1 << FE0) | (1 << DOR0) | (1 << UPE0)))
-    {
-        return -1;
-    }
-
-#else
-    status = UCSR1A;
-    while (!(status & (1 << RXC1)))
-    {
-        return -1;
-    } // status = UCSR1A;}
-
-    // Get status and 9th bit, then data
-    resh = UCSR1B;
-    resl = UDR1;
-
-    // If error, return -1
-    if (status & ((1 << FE1) | (1 << DOR1) | (1 << UPE1)))
-    {
-        return -1;
-    }
-#endif
-
-    // Filter the 9th bit, then return
-    resh = (resh >> 1) & 0x01;
-    return ((resh << 8) | resl);
-#endif
-    return DataRx;
-#endif
-}
-
-//--------------------------------------------------------------------------------------------
-void XpressNetClass::USART_Transmit(unsigned char data8)
-{
-    // wait for empty transmit buffer
-#if APP_CFG_UC == APP_CFG_UC_ATMEL
-#ifdef __AVR_ATmega8__
-    while (!(UCSRA & (1 << UDRE)))
-    {
-    }
-    // put the data into buffer, and send
-    UDR = data8;
-#else
-#ifdef SERIAL_PORT_0
-    while (!(UCSR0A & (1 << UDRE0)))
-    {
-    }
-    // put the data into buffer, and send
-    UDR0 = data8;
-#else
-    while (!(UCSR1A & (1 << UDRE1)))
-    {
-    }
-    // put the data into buffer, and send
-    UDR1 = data8;
-#endif
-#endif
-#else
-
-    Serial3.print(data8);
-#endif
-}
+void XpressNetClass::USART_Transmit(unsigned char data8) { Serial3.print(data8); }
 
 //--------------------------------------------------------------------------------------------
 // Löschen des letzten gesendeten Befehls
@@ -870,36 +739,12 @@ void XpressNetClass::XNetclear()
 
 //--------------------------------------------------------------------------------------------
 // Interrupt routine for reading via Serial
-#if APP_CFG_UC == APP_CFG_UC_ATMEL
-#ifdef __AVR_ATmega328P__
-ISR(USART_RX_vect)
-{
-    XpressNetClass::handle_interrupt(); // weiterreichen an die Funktion
-}
-
-#else
-#ifdef SERIAL_PORT_0
-ISR(USART0_RX_vect)
-{
-    XpressNetClass::handle_interrupt(); // weiterreichen an die Funktion
-}
-
-#else
-ISR(USART1_RX_vect)
-{
-    XpressNetClass::handle_interrupt(); // weiterreichen an die Funktion
-}
-#endif
-#endif
-#else
-#endif
-
 void Stm32Uart2Int(uint16_t DataRx) { XpressNetClass::handle_interrupt(DataRx); }
+
 void Stm32UartTxEnd(void) { XpressNetClass::XpNetMsgEnd(); }
 
 // Interrupt handling
-/* static */
-inline void XpressNetClass::handle_interrupt(uint16_t DataRx)
+void XpressNetClass::handle_interrupt(uint16_t DataRx)
 {
     if (active_object)
     {
@@ -907,7 +752,7 @@ inline void XpressNetClass::handle_interrupt(uint16_t DataRx)
     }
 }
 
-inline void XpressNetClass::XpNetMsgEnd(void)
+void XpressNetClass::XpNetMsgEnd(void)
 {
     if (active_object)
     {
@@ -1043,7 +888,6 @@ void XpressNetClass::XNetsend(unsigned char* dataString, int byteCount)
 {
     digitalWrite(MAX485_CONTROL, HIGH);
     Serial3.write(dataString, byteCount);
-    WAIT_FOR_XMIT_COMPLETE;
 }
 
 /*
