@@ -396,6 +396,9 @@ recieveStatus XpressNetClass::receive(void)
             // if the LED is off turn it on and off (Blink):
             ledState = !ledState;
             if (notifyXNetStatus) notifyXNetStatus(ledState);
+
+            // Workaround to reset incomplete data transmission (TX) and prevent blocking the XpressNet bus
+            if (!ledState) XpressNetClass::XpNetMsgEnd();
         }
     }
     // Slot Server aktualisieren
@@ -912,6 +915,7 @@ inline void XpressNetClass::XpNetMsgEnd(void)
     if (active_object)
     {
         digitalWrite(PB0, LOW);
+        if (notifyXNetStatus) notifyXNetStatus(LOW);
     }
 }
 
@@ -1042,8 +1046,11 @@ void XpressNetClass::XNetsend(void)
 void XpressNetClass::XNetsend(unsigned char* dataString, int byteCount)
 {
     digitalWrite(MAX485_CONTROL, HIGH);
+    if (notifyXNetStatus) notifyXNetStatus(HIGH);
     Serial3.write(dataString, byteCount);
     WAIT_FOR_XMIT_COMPLETE;
+//    digitalWrite (MAX485_CONTROL, LOW);
+//    if (notifyXNetStatus) notifyXNetStatus(LOW);
 }
 
 /*
